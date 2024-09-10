@@ -1,3 +1,4 @@
+import app/db
 import app/router
 import app/web
 import gleam/erlang/process
@@ -11,7 +12,7 @@ pub fn main() {
   wisp.configure_logger()
 
   let secret_key_base = wisp.random_string(64)
-  use conn <- sqlight.with_connection(":memory:")
+  use conn <- db.get_db()
 
   let context = web.Context(conn)
   let handler = router.handle_request(_, context)
