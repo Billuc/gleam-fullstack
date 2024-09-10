@@ -5,6 +5,7 @@ import cake
 import cake/delete as d
 import cake/dialect/sqlite_dialect
 import cake/param
+import cake/select as s
 import cake/update as u
 import cake/where as w
 import gleam/dynamic
@@ -16,15 +17,24 @@ import pprint
 import sqlight
 
 pub fn get(id: String, ctx: web.Context) -> Result(item.Item, error.AppError) {
-  let sql =
-    "
-    select id, name, amount
-    from items
-    where id = ?;
-    "
+  let query =
+    s.new()
+    |> s.selects([s.col("id"), s.col("name"), s.col("amount")])
+    |> s.from_table("items")
+    |> s.where(w.col("id") |> w.eq(w.string(id)))
+    |> s.to_query
+    |> sqlite_dialect.read_query_to_prepared_statement
+
+  pprint.debug(query |> cake.get_sql)
+  pprint.debug(query |> cake.get_params)
 
   let results =
-    sqlight.query(sql, ctx.db_conn, [sqlight.text(id)], item.decoder)
+    sqlight.query(
+      query |> cake.get_sql,
+      ctx.db_conn,
+      query |> cake.get_params |> list.map(map_param),
+      item.decoder,
+    )
 
   case results {
     Ok(res) ->
