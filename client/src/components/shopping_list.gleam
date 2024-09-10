@@ -8,9 +8,9 @@ import types/msg
 
 pub fn shopping_list(model: model.Model) -> Element(msg.Msg) {
   element.keyed(html.div([attribute.class("flex flex-col gap-2 pb-2")], _), {
-    use #(name, amount) <- list.map(model)
-    let item = shopping_item(name, amount)
+    use #(id, item) <- list.map(model)
+    let component = shopping_item(item)
 
-    #(name, item)
+    #(id, component)
   })
 }

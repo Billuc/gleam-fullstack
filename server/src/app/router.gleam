@@ -14,6 +14,11 @@ pub fn handle_request(req: Request, ctx: web.Context) -> Response {
   case sig {
     RouteSignature(http.Get, ["items"]) -> item_service.get_items(ctx)
     RouteSignature(http.Post, ["items"]) -> item_service.create_item(ctx, req)
+    RouteSignature(http.Get, ["items", id]) -> item_service.get_item(ctx, id)
+    RouteSignature(http.Post, ["items", id]) ->
+      item_service.update_item(ctx, req, id)
+    RouteSignature(http.Delete, ["items", id]) ->
+      item_service.delete_item(ctx, id)
     _ -> wisp.not_found()
   }
 }

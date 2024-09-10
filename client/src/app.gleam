@@ -6,6 +6,7 @@ import lustre/attribute
 import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html
+import services/item_service
 import types/model.{type Model}
 import types/msg
 
@@ -22,7 +23,7 @@ pub fn main() {
 
 fn init(_) -> #(Model, Effect(msg.Msg)) {
   let model = []
-  let effect = effect.none()
+  let effect = item_service.get_all_items()
 
   #(model, effect)
 }
@@ -30,12 +31,28 @@ fn init(_) -> #(Model, Effect(msg.Msg)) {
 // ------------------ UPDATE ---------------------
 
 fn update(model: Model, msg: msg.Msg) -> #(Model, Effect(msg.Msg)) {
-  let new_model = case msg {
-    msg.ProductAdded(name) -> [#(name, 0), ..model]
-    msg.QuantityChanged(name, amount) -> list.key_set(model, name, amount)
+  case msg {
+    msg.ProductAdded(name) -> #(model, item_service.new_item(name))
+    msg.QuantityChanged(id, update) -> #(
+      model,
+      item_service.update_item(id, update),
+    )
+    msg.ServerCreatedItem(Ok(item)) -> #(
+      [#(item.id, item), ..model],
+      effect.none(),
+    )
+    msg.ServerCreatedItem(Error(_)) -> #(model, effect.none())
+    msg.ServerSentItems(Ok(items)) -> #(
+      items |> list.map(fn(i) { #(i.id, i) }),
+      effect.none(),
+    )
+    msg.ServerSentItems(Error(_)) -> #(model, effect.none())
+    msg.ServerUpdatedItem(Ok(item)) -> #(
+      model |> list.key_set(item.id, item),
+      effect.none(),
+    )
+    msg.ServerUpdatedItem(Error(_)) -> #(model, effect.none())
   }
-
-  #(new_model, effect.none())
 }
 
 // ------------------------ VIEW -------------------------

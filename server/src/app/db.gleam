@@ -1,7 +1,7 @@
 import sqlight
 
 pub fn get_db(f: fn(sqlight.Connection) -> a) -> a {
-  use conn <- sqlight.with_connection(":memory:")
+  use conn <- sqlight.with_connection("./db.sqlite")
 
   let migration =
     "
