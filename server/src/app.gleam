@@ -2,9 +2,7 @@ import app/db
 import app/router
 import app/web
 import gleam/erlang/process
-import gleam/io
 import mist
-import sqlight
 import wisp
 import wisp/wisp_mist
 

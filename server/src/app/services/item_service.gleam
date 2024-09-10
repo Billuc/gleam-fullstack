@@ -2,13 +2,9 @@ import app/repositories/item_repository
 import app/types/error
 import app/types/item
 import app/web
-import gleam/dynamic
 import gleam/json
-import gleam/list
 import gleam/result
 import gleam/string_builder
-import gluid
-import sqlight
 import wisp
 
 pub fn get_items(ctx: web.Context) -> wisp.Response {

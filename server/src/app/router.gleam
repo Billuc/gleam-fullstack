@@ -1,7 +1,6 @@
 import app/services/item_service
 import app/web
 import gleam/http
-import gleam/string_builder
 import wisp.{type Request, type Response}
 
 type RouteSignature {
