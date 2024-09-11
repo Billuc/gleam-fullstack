@@ -1,9 +1,9 @@
 import app/repositories/item_repository
-import app/types/item
 import app/utils/service_utils
 import app/web
 import gleam/result
 import gleam/string_builder
+import shared/types/item
 import wisp
 
 pub fn get_items(ctx: web.Context) -> wisp.Response {
