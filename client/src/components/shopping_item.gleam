@@ -18,6 +18,8 @@ pub fn shopping_item(item: model.ShoppingItem) -> Element(msg.Msg) {
     |> result.replace_error([])
   }
 
+  let handle_remove_input = fn(_) { Ok(msg.ProductRemoved(item.id)) }
+
   html.div([], [
     html.label(
       [
@@ -33,6 +35,15 @@ pub fn shopping_item(item: model.ShoppingItem) -> Element(msg.Msg) {
           attribute.class("w-1/3 pl-2 rounded-sm bg-white/50 hover:bg-white/75"),
           event.on("input", handle_amount_input),
         ]),
+        html.button(
+          [
+            attribute.class(
+              "w-6 h-6 flex justify-center rounded-full bg-red-500 hover:bg-red-600 text-white font-bold",
+            ),
+            event.on("click", handle_remove_input),
+          ],
+          [html.text("x")],
+        ),
       ],
     ),
   ])

@@ -37,21 +37,39 @@ fn update(model: Model, msg: msg.Msg) -> #(Model, Effect(msg.Msg)) {
       model,
       item_service.update_item(id, update),
     )
-    msg.ServerCreatedItem(Ok(item)) -> #(
-      [#(item.id, item), ..model],
-      effect.none(),
-    )
+    msg.ProductRemoved(id) -> #(model, item_service.delete_item(id))
+    msg.ServerCreatedItem(Ok(item)) -> #(model |> add_item(item), effect.none())
     msg.ServerCreatedItem(Error(_)) -> #(model, effect.none())
-    msg.ServerSentItems(Ok(items)) -> #(
-      items |> list.map(fn(i) { #(i.id, i) }),
-      effect.none(),
-    )
+    msg.ServerSentItems(Ok(items)) -> #(gen_model(items), effect.none())
     msg.ServerSentItems(Error(_)) -> #(model, effect.none())
     msg.ServerUpdatedItem(Ok(item)) -> #(
-      model |> list.key_set(item.id, item),
+      model |> update_item(item),
       effect.none(),
     )
     msg.ServerUpdatedItem(Error(_)) -> #(model, effect.none())
+    msg.ServerDeletedItem(Ok(id)) -> #(model |> delete_item(id), effect.none())
+    msg.ServerDeletedItem(Error(_)) -> #(model, effect.none())
+  }
+}
+
+fn add_item(model: Model, item: model.ShoppingItem) -> Model {
+  [#(item.id, item), ..model]
+}
+
+fn gen_model(items: List(model.ShoppingItem)) -> Model {
+  items |> list.map(fn(i) { #(i.id, i) })
+}
+
+fn update_item(model: Model, item: model.ShoppingItem) -> Model {
+  model |> list.key_set(item.id, item)
+}
+
+fn delete_item(model: Model, id: String) -> Model {
+  let res = model |> list.key_pop(id)
+
+  case res {
+    Ok(#(_poped, rest)) -> rest
+    Error(_) -> model
   }
 }
 

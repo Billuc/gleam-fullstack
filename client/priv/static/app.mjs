@@ -1878,6 +1878,46 @@ function do_repeat(loop$a, loop$times, loop$acc) {
 function repeat3(a, times) {
   return do_repeat(a, times, toList([]));
 }
+function do_pop_map(loop$haystack, loop$mapper, loop$checked) {
+  while (true) {
+    let haystack = loop$haystack;
+    let mapper = loop$mapper;
+    let checked = loop$checked;
+    if (haystack.hasLength(0)) {
+      return new Error(void 0);
+    } else {
+      let x = haystack.head;
+      let rest$1 = haystack.tail;
+      let $ = mapper(x);
+      if ($.isOk()) {
+        let y = $[0];
+        return new Ok([y, append4(reverse(checked), rest$1)]);
+      } else {
+        loop$haystack = rest$1;
+        loop$mapper = mapper;
+        loop$checked = prepend(x, checked);
+      }
+    }
+  }
+}
+function pop_map(haystack, is_desired) {
+  return do_pop_map(haystack, is_desired, toList([]));
+}
+function key_pop(haystack, key) {
+  return pop_map(
+    haystack,
+    (entry) => {
+      let k = entry[0];
+      let v = entry[1];
+      if (isEqual(k, key)) {
+        let k$1 = k;
+        return new Ok(v);
+      } else {
+        return new Error(void 0);
+      }
+    }
+  );
+}
 function key_set(list3, key, value3) {
   if (list3.hasLength(0)) {
     return toList([[key, value3]]);
@@ -3682,6 +3722,11 @@ function post(url, body, expect) {
     }
   );
 }
+function send2(req, expect) {
+  return from((_capture) => {
+    return do_send(req, expect, _capture);
+  });
+}
 function response_to_result(response) {
   if (response instanceof Response && (200 <= response.status && response.status <= 299)) {
     let status = response.status;
@@ -3699,6 +3744,15 @@ function response_to_result(response) {
     let body = response.body;
     return new Error(new OtherError(code, body));
   }
+}
+function expect_text(to_msg) {
+  return new ExpectTextResponse(
+    (response) => {
+      let _pipe = response;
+      let _pipe$1 = then$(_pipe, response_to_result);
+      return to_msg(_pipe$1);
+    }
+  );
 }
 function expect_json(decoder, to_msg) {
   return new ExpectTextResponse(
@@ -3762,6 +3816,12 @@ var ProductAdded = class extends CustomType {
     this.name = name;
   }
 };
+var ProductRemoved = class extends CustomType {
+  constructor(id) {
+    super();
+    this.id = id;
+  }
+};
 var QuantityChanged = class extends CustomType {
   constructor(id, update2) {
     super();
@@ -3782,6 +3842,12 @@ var ServerSentItems = class extends CustomType {
   }
 };
 var ServerUpdatedItem = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var ServerDeletedItem = class extends CustomType {
   constructor(x0) {
     super();
     this[0] = x0;
@@ -3841,6 +3907,9 @@ function shopping_item(item) {
     );
     return replace_error(_pipe$3, toList([]));
   };
+  let handle_remove_input = (_) => {
+    return new Ok(new ProductRemoved(item.id));
+  };
   return div(
     toList([]),
     toList([
@@ -3861,6 +3930,15 @@ function shopping_item(item) {
               ),
               on2("input", handle_amount_input)
             ])
+          ),
+          button(
+            toList([
+              class$(
+                "w-6 h-6 flex justify-center rounded-full bg-red-500 hover:bg-red-600 text-white font-bold"
+              ),
+              on2("click", handle_remove_input)
+            ]),
+            toList([text2("x")])
           )
         ])
       )
@@ -3935,12 +4013,63 @@ function update_item(id, update2) {
     )
   );
 }
+function delete_item(id) {
+  let url = append3("http://localhost:2345/items/", id);
+  let $ = to(url);
+  if (!$.isOk()) {
+    throw makeError(
+      "assignment_no_match",
+      "services/item_service",
+      40,
+      "delete_item",
+      "Assignment pattern did not match",
+      { value: $ }
+    );
+  }
+  let req = $[0];
+  return send2(
+    (() => {
+      let _pipe = req;
+      return set_method(_pipe, new Delete());
+    })(),
+    expect_text(
+      (var0) => {
+        return new ServerDeletedItem(var0);
+      }
+    )
+  );
+}
 
 // build/dev/javascript/app/app.mjs
 function init2(_) {
   let model = toList([]);
   let effect = get_all_items();
   return [model, effect];
+}
+function add_item(model, item) {
+  return prepend([item.id, item], model);
+}
+function gen_model(items) {
+  let _pipe = items;
+  return map3(_pipe, (i) => {
+    return [i.id, i];
+  });
+}
+function update_item2(model, item) {
+  let _pipe = model;
+  return key_set(_pipe, item.id, item);
+}
+function delete_item2(model, id) {
+  let res = (() => {
+    let _pipe = model;
+    return key_pop(_pipe, id);
+  })();
+  if (res.isOk()) {
+    let rest2 = res[0][1];
+    return rest2;
+  } else {
+    return model;
+  }
 }
 function update(model, msg) {
   if (msg instanceof ProductAdded) {
@@ -3950,22 +4079,23 @@ function update(model, msg) {
     let id = msg.id;
     let update$1 = msg.update;
     return [model, update_item(id, update$1)];
+  } else if (msg instanceof ProductRemoved) {
+    let id = msg.id;
+    return [model, delete_item(id)];
   } else if (msg instanceof ServerCreatedItem && msg[0].isOk()) {
     let item = msg[0][0];
-    return [prepend([item.id, item], model), none()];
+    return [
+      (() => {
+        let _pipe = model;
+        return add_item(_pipe, item);
+      })(),
+      none()
+    ];
   } else if (msg instanceof ServerCreatedItem && !msg[0].isOk()) {
     return [model, none()];
   } else if (msg instanceof ServerSentItems && msg[0].isOk()) {
     let items = msg[0][0];
-    return [
-      (() => {
-        let _pipe = items;
-        return map3(_pipe, (i) => {
-          return [i.id, i];
-        });
-      })(),
-      none()
-    ];
+    return [gen_model(items), none()];
   } else if (msg instanceof ServerSentItems && !msg[0].isOk()) {
     return [model, none()];
   } else if (msg instanceof ServerUpdatedItem && msg[0].isOk()) {
@@ -3973,7 +4103,18 @@ function update(model, msg) {
     return [
       (() => {
         let _pipe = model;
-        return key_set(_pipe, item.id, item);
+        return update_item2(_pipe, item);
+      })(),
+      none()
+    ];
+  } else if (msg instanceof ServerUpdatedItem && !msg[0].isOk()) {
+    return [model, none()];
+  } else if (msg instanceof ServerDeletedItem && msg[0].isOk()) {
+    let id = msg[0][0];
+    return [
+      (() => {
+        let _pipe = model;
+        return delete_item2(_pipe, id);
       })(),
       none()
     ];

@@ -1,3 +1,5 @@
+import gleam/http
+import gleam/http/request
 import gleam/json
 import gleam/string
 import lustre_http
@@ -30,5 +32,15 @@ pub fn update_item(id: String, update: model.UpsertItem) {
       #("amount", json.int(update.amount)),
     ]),
     lustre_http.expect_json(model.item_decoder, msg.ServerUpdatedItem),
+  )
+}
+
+pub fn delete_item(id: String) {
+  let url = string.append("http://localhost:2345/items/", id)
+  let assert Ok(req) = request.to(url)
+
+  lustre_http.send(
+    req |> request.set_method(http.Delete),
+    lustre_http.expect_text(msg.ServerDeletedItem),
   )
 }

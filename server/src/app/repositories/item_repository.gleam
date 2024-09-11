@@ -4,11 +4,11 @@ import app/web
 import cake
 import cake/delete as d
 import cake/dialect/sqlite_dialect
+import cake/insert as i
 import cake/param
 import cake/select as s
 import cake/update as u
 import cake/where as w
-import gleam/dynamic
 import gleam/list
 import gleam/result
 import gleam/string
@@ -49,13 +49,23 @@ pub fn get(id: String, ctx: web.Context) -> Result(item.Item, error.AppError) {
 }
 
 pub fn get_many(ctx: web.Context) -> Result(List(item.Item), error.AppError) {
-  let sql =
-    "
-    select id, name, amount
-    from items;
-    "
+  let query =
+    s.new()
+    |> s.selects([s.col("id"), s.col("name"), s.col("amount")])
+    |> s.from_table("items")
+    |> s.to_query
+    |> sqlite_dialect.read_query_to_prepared_statement
 
-  let results = sqlight.query(sql, ctx.db_conn, [], item.decoder)
+  pprint.debug(query |> cake.get_sql)
+  pprint.debug(query |> cake.get_params)
+
+  let results =
+    sqlight.query(
+      query |> cake.get_sql,
+      ctx.db_conn,
+      query |> cake.get_params |> list.map(map_param),
+      item.decoder,
+    )
 
   case results {
     Ok(res) -> Ok(res)
@@ -68,28 +78,31 @@ pub fn create(
   create: item.CreateItem,
   ctx: web.Context,
 ) -> Result(String, error.AppError) {
-  let sql =
-    "
-    insert into items(id, name, amount) values (?, ?, ?) returning [id];
-  "
+  let id = gluid.guidv4()
+
+  let query =
+    i.new()
+    |> i.table("items")
+    |> i.columns(["id", "name", "amount"])
+    |> i.source_values([
+      i.row([i.string(id), i.string(create.name), i.int(create.amount)]),
+    ])
+    |> i.to_query
+    |> sqlite_dialect.write_query_to_prepared_statement
+
+  pprint.debug(query |> cake.get_sql)
+  pprint.debug(query |> cake.get_params)
 
   let results =
     sqlight.query(
-      sql,
+      query |> cake.get_sql,
       ctx.db_conn,
-      [
-        sqlight.text(gluid.guidv4()),
-        sqlight.text(create.name),
-        sqlight.int(create.amount),
-      ],
-      dynamic.element(0, dynamic.string),
+      query |> cake.get_params |> list.map(map_param),
+      fn(_) { Ok(Nil) },
     )
 
   case results {
-    Ok(ids) ->
-      ids
-      |> list.first
-      |> result.replace_error(error.DBError("No results"))
+    Ok(_) -> Ok(id)
     Error(err) ->
       Error(error.DBError(string.append("Error during query : ", err.message)))
   }

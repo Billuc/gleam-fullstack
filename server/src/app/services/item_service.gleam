@@ -80,7 +80,8 @@ pub fn delete_item(ctx: web.Context, id: String) -> wisp.Response {
   let result = item_repository.delete(id, ctx)
 
   case result {
-    Ok(_) -> wisp.ok()
+    Ok(_) ->
+      wisp.ok() |> wisp.set_body(wisp.Text(string_builder.from_string(id)))
     Error(_) -> wisp.internal_server_error()
   }
 }
