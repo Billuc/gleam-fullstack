@@ -1,53 +1,37 @@
 import app/repositories/item_repository
-import app/types/error
 import app/types/item
+import app/utils/service_utils
 import app/web
 import gleam/result
 import gleam/string_builder
 import wisp
 
 pub fn get_items(ctx: web.Context) -> wisp.Response {
-  let result =
-    item_repository.get_many(ctx)
-    |> result.try(fn(items) { Ok(item.to_json_list(items)) })
+  use <- service_utils.handle_result
 
-  case result {
-    Ok(json) -> wisp.json_response(json, 200)
-    Error(_) -> wisp.internal_server_error()
-  }
+  item_repository.get_many(ctx)
+  |> result.try(fn(items) { Ok(item.to_json_list(items)) })
 }
 
 pub fn get_item(ctx: web.Context, id: String) -> wisp.Response {
-  let result =
-    item_repository.get(id, ctx)
-    |> result.try(fn(i) { Ok(item.to_json(i)) })
+  use <- service_utils.handle_result
 
-  case result {
-    Ok(json) -> wisp.json_response(json, 200)
-    Error(_) -> wisp.internal_server_error()
-  }
+  item_repository.get(id, ctx)
+  |> result.try(fn(i) { Ok(item.to_json(i)) })
 }
 
 pub fn create_item(ctx: web.Context, req: wisp.Request) -> wisp.Response {
-  use json <- wisp.require_json(req)
+  use #(_, json) <- service_utils.with_route_params(
+    req,
+    fn(_) { Ok(Nil) },
+    item.decoder_create,
+  )
+  use <- service_utils.handle_result
 
-  let result =
-    json
-    |> item.decoder_create
-    |> result.replace_error(error.DecoderError("Error while decoding input"))
-    |> result.try(item_repository.create(_, ctx))
-    |> result.try(item_repository.get(_, ctx))
-    |> result.try(fn(v) { Ok(item.to_json(v)) })
-
-  case result {
-    Ok(id) -> wisp.json_response(id, 200)
-    Error(error.DecoderError(msg)) ->
-      wisp.bad_request()
-      |> wisp.set_body(wisp.Text(string_builder.from_string(msg)))
-    Error(error.DBError(msg)) ->
-      wisp.internal_server_error()
-      |> wisp.set_body(wisp.Text(string_builder.from_string(msg)))
-  }
+  json
+  |> item_repository.create(ctx)
+  |> result.try(item_repository.get(_, ctx))
+  |> result.try(fn(v) { Ok(item.to_json(v)) })
 }
 
 pub fn update_item(
@@ -55,33 +39,21 @@ pub fn update_item(
   req: wisp.Request,
   id: String,
 ) -> wisp.Response {
-  use json <- wisp.require_json(req)
+  use #(_, json) <- service_utils.with_route_params(
+    req,
+    fn(_) { Ok(Nil) },
+    item.decoder_create,
+  )
+  use <- service_utils.handle_result
 
-  let result =
-    json
-    |> item.decoder_create
-    |> result.replace_error(error.DecoderError("Error while decoding input"))
-    |> result.try(item_repository.update(_, id, ctx))
-    |> result.try(item_repository.get(_, ctx))
-    |> result.try(fn(v) { Ok(item.to_json(v)) })
-
-  case result {
-    Ok(id) -> wisp.json_response(id, 200)
-    Error(error.DecoderError(msg)) ->
-      wisp.bad_request()
-      |> wisp.set_body(wisp.Text(string_builder.from_string(msg)))
-    Error(error.DBError(msg)) ->
-      wisp.internal_server_error()
-      |> wisp.set_body(wisp.Text(string_builder.from_string(msg)))
-  }
+  json
+  |> item_repository.update(id, ctx)
+  |> result.try(item_repository.get(_, ctx))
+  |> result.try(fn(v) { Ok(item.to_json(v)) })
 }
 
 pub fn delete_item(ctx: web.Context, id: String) -> wisp.Response {
-  let result = item_repository.delete(id, ctx)
+  use <- service_utils.handle_result
 
-  case result {
-    Ok(_) ->
-      wisp.ok() |> wisp.set_body(wisp.Text(string_builder.from_string(id)))
-    Error(_) -> wisp.internal_server_error()
-  }
+  item_repository.delete(id, ctx) |> result.map(string_builder.from_string)
 }

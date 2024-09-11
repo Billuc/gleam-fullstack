@@ -70,11 +70,11 @@ pub fn update(
   |> result.replace(id)
 }
 
-pub fn delete(id: String, ctx: web.Context) -> Result(Nil, error.AppError) {
+pub fn delete(id: String, ctx: web.Context) -> Result(String, error.AppError) {
   d.new()
   |> d.table("items")
   |> d.where(w.col("id") |> w.eq(w.string(id)))
   |> d.to_query
   |> sqlight_utils.exec_write_query(ctx.db_conn, Ok)
-  |> result.replace(Nil)
+  |> result.replace(id)
 }
