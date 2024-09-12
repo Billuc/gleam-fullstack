@@ -18,7 +18,7 @@ pub fn get(id: String, ctx: web.Context) -> Result(item.Item, error.AppError) {
   |> s.from_table("items")
   |> s.where(w.col("id") |> w.eq(w.string(id)))
   |> s.to_query
-  |> sqlight_utils.exec_read_query(ctx.db_conn, item.decoder)
+  |> sqlight_utils.exec_read_query(ctx.db_conn, item.db_decoder)
   |> result.then(fn(items) {
     items
     |> list.first
@@ -33,7 +33,7 @@ pub fn get_many(ctx: web.Context) -> Result(List(item.Item), error.AppError) {
   |> s.selects([s.col("id"), s.col("name"), s.col("amount")])
   |> s.from_table("items")
   |> s.to_query
-  |> sqlight_utils.exec_read_query(ctx.db_conn, item.decoder)
+  |> sqlight_utils.exec_read_query(ctx.db_conn, item.db_decoder)
 }
 
 pub fn create(

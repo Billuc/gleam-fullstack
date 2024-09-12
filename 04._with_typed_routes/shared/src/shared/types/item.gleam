@@ -1,7 +1,7 @@
 import gleam/dynamic
 import gleam/json
 import gleam/result
-import gleam/string_builder.{type StringBuilder}
+import shared/types/converter
 
 pub type Item {
   Item(id: String, name: String, amount: Int)
@@ -11,12 +11,54 @@ pub type CreateItem {
   CreateItem(name: String, amount: Int)
 }
 
-pub fn decoder(
+pub const item_converter = converter.JsonConverter(item_encoder, item_decoder)
+
+pub const item_list_converter = converter.JsonConverter(
+  item_list_encoder,
+  item_list_decoder,
+)
+
+pub const item_create_converter = converter.JsonConverter(
+  encoder_create,
+  decoder_create,
+)
+
+fn item_encoder(item: Item) -> json.Json {
+  json.object([
+    #("id", json.string(item.id)),
+    #("name", json.string(item.name)),
+    #("amount", json.int(item.amount)),
+  ])
+}
+
+fn item_decoder(
   value: dynamic.Dynamic,
 ) -> Result(Item, List(dynamic.DecodeError)) {
   value
-  |> dynamic.tuple3(dynamic.string, dynamic.string, dynamic.int)
-  |> result.try(fn(v) { Ok(Item(v.0, v.1, v.2)) })
+  |> dynamic.decode3(
+    Item,
+    dynamic.field("id", dynamic.string),
+    dynamic.field("name", dynamic.string),
+    dynamic.field("amount", dynamic.int),
+  )
+}
+
+fn item_list_encoder(items: List(Item)) -> json.Json {
+  json.array(items, item_encoder)
+}
+
+fn item_list_decoder(
+  value: dynamic.Dynamic,
+) -> Result(List(Item), List(dynamic.DecodeError)) {
+  value
+  |> dynamic.list(item_decoder)
+}
+
+pub fn encoder_create(value: CreateItem) -> json.Json {
+  json.object([
+    #("name", json.string(value.name)),
+    #("amount", json.int(value.amount)),
+  ])
 }
 
 pub fn decoder_create(
@@ -30,41 +72,10 @@ pub fn decoder_create(
   )
 }
 
-pub fn json_decoder(
+pub fn db_decoder(
   value: dynamic.Dynamic,
 ) -> Result(Item, List(dynamic.DecodeError)) {
   value
-  |> dynamic.decode3(
-    Item,
-    dynamic.field("id", dynamic.string),
-    dynamic.field("name", dynamic.string),
-    dynamic.field("amount", dynamic.int),
-  )
-}
-
-pub fn json_list_decoder(
-  value: dynamic.Dynamic,
-) -> Result(List(Item), List(dynamic.DecodeError)) {
-  value
-  |> dynamic.list(json_decoder)
-}
-
-fn to_json_object(item: Item) -> json.Json {
-  json.object([
-    #("id", json.string(item.id)),
-    #("name", json.string(item.name)),
-    #("amount", json.int(item.amount)),
-  ])
-}
-
-pub fn to_json(item: Item) -> StringBuilder {
-  item
-  |> to_json_object
-  |> json.to_string_builder
-}
-
-pub fn to_json_list(items: List(Item)) -> StringBuilder {
-  items
-  |> json.array(to_json_object)
-  |> json.to_string_builder
+  |> dynamic.tuple3(dynamic.string, dynamic.string, dynamic.int)
+  |> result.try(fn(v) { Ok(Item(v.0, v.1, v.2)) })
 }

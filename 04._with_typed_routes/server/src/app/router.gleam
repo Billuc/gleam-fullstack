@@ -1,24 +1,17 @@
 import app/services/item_service
+import app/utils/router
 import app/web
-import gleam/http
+import shared/routes/item_routes
 import wisp.{type Request, type Response}
-
-type RouteSignature {
-  RouteSignature(method: http.Method, segments: List(String))
-}
 
 pub fn handle_request(req: Request, ctx: web.Context) -> Response {
   use _req <- web.middleware(req)
-  let sig = RouteSignature(req.method, wisp.path_segments(req))
 
-  case sig {
-    RouteSignature(http.Get, ["items"]) -> item_service.get_items(ctx)
-    RouteSignature(http.Post, ["items"]) -> item_service.create_item(ctx, req)
-    RouteSignature(http.Get, ["items", id]) -> item_service.get_item(ctx, id)
-    RouteSignature(http.Post, ["items", id]) ->
-      item_service.update_item(ctx, req, id)
-    RouteSignature(http.Delete, ["items", id]) ->
-      item_service.delete_item(ctx, id)
-    _ -> wisp.not_found()
-  }
+  router.for(req)
+  |> router.try(item_routes.get_all(), item_service.get_all(ctx, _))
+  |> router.try(item_routes.get(), item_service.get(ctx, _))
+  |> router.try(item_routes.create(), item_service.create(ctx, _))
+  |> router.try(item_routes.update(), item_service.update(ctx, _))
+  |> router.try(item_routes.delete(), item_service.delete(ctx, _))
+  |> router.unwrap
 }
