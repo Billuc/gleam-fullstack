@@ -14,5 +14,9 @@ pub fn middleware(
   use <- wisp.rescue_crashes
   use req <- wisp.handle_head(req)
 
+  let assert Ok(priv) = wisp.priv_directory("app")
+  let static_dir = priv <> "/static"
+  use <- wisp.serve_static(req, under: "/static", from: static_dir)
+
   handle_request(req)
 }
