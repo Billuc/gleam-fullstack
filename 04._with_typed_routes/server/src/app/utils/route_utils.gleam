@@ -4,6 +4,8 @@ import gleam/bool
 import gleam/dynamic
 import gleam/json
 import gleam/result
+import gleam/string
+import pprint
 import shared/types/routes
 import wisp
 
@@ -19,6 +21,9 @@ pub fn receive(
   use <- bool.guard(req.method != route.method, Error(Nil))
   use path <- handle_path(req, route)
   use body <- handle_body(req, route)
+
+  pprint.debug(body)
+
   use <- service_utils.handle_result
 
   let result = handler(RouteOptions(path, body))
@@ -53,6 +58,12 @@ pub fn handle_body(
         |> wisp.string_body("Error while decoding body as JSON")
     }
   }
+
+  pprint.debug(string.append(
+    "Trying to get body from request... Route has body : ",
+    bool.to_string(route.has_body),
+  ))
+
   case route.has_body {
     False -> call_callback(route.req_body_converter.decoder(dynamic.from(Nil)))
     True -> {

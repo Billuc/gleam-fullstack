@@ -1,6 +1,8 @@
 import app/types/error
 import app/utils/route_utils
 import gleam/result
+import gleam/string
+import pprint
 import shared/types/routes
 import wisp
 
@@ -18,6 +20,8 @@ pub fn try(
   handler: fn(route_utils.RouteOptions(p, b)) -> Result(res, error.AppError),
 ) -> Result(Router, wisp.Response) {
   use router <- result.try(router_res)
+
+  pprint.debug(string.append("Trying route... Current path : ", router.req.path))
 
   let result = route_utils.receive(router.req, route, handler)
 

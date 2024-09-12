@@ -38,6 +38,7 @@ pub fn request(
       |> request.set_body(
         body |> route.req_body_converter.encoder |> json.to_string,
       )
+      |> request.set_header("Content-Type", "application/json")
     False -> req
   }
 }
