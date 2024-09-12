@@ -7,6 +7,7 @@ import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html
 import services/item_service
+import shared/types/item
 import types/model.{type Model}
 import types/msg
 
@@ -52,15 +53,15 @@ fn update(model: Model, msg: msg.Msg) -> #(Model, Effect(msg.Msg)) {
   }
 }
 
-fn add_item(model: Model, item: model.ShoppingItem) -> Model {
+fn add_item(model: Model, item: item.Item) -> Model {
   [#(item.id, item), ..model]
 }
 
-fn gen_model(items: List(model.ShoppingItem)) -> Model {
+fn gen_model(items: List(item.Item)) -> Model {
   items |> list.map(fn(i) { #(i.id, i) })
 }
 
-fn update_item(model: Model, item: model.ShoppingItem) -> Model {
+fn update_item(model: Model, item: item.Item) -> Model {
   model |> list.key_set(item.id, item)
 }
 

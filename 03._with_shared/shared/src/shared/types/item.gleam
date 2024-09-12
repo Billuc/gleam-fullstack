@@ -30,6 +30,25 @@ pub fn decoder_create(
   )
 }
 
+pub fn json_decoder(
+  value: dynamic.Dynamic,
+) -> Result(Item, List(dynamic.DecodeError)) {
+  value
+  |> dynamic.decode3(
+    Item,
+    dynamic.field("id", dynamic.string),
+    dynamic.field("name", dynamic.string),
+    dynamic.field("amount", dynamic.int),
+  )
+}
+
+pub fn json_list_decoder(
+  value: dynamic.Dynamic,
+) -> Result(List(Item), List(dynamic.DecodeError)) {
+  value
+  |> dynamic.list(json_decoder)
+}
+
 fn to_json_object(item: Item) -> json.Json {
   json.object([
     #("id", json.string(item.id)),

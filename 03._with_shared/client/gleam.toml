@@ -20,6 +20,7 @@ lustre = ">= 4.4.0 and < 5.0.0"
 lustre_http = ">= 0.5.2 and < 1.0.0"
 gleam_json = ">= 1.0.1 and < 2.0.0"
 gleam_http = ">= 3.6.0 and < 4.0.0"
+shared = { path = "../shared" }
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

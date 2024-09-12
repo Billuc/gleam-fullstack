@@ -4,16 +4,16 @@ import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
-import types/model
+import shared/types/item
 import types/msg
 
-pub fn shopping_item(item: model.ShoppingItem) -> Element(msg.Msg) {
+pub fn shopping_item(item: item.Item) -> Element(msg.Msg) {
   let handle_amount_input = fn(e) {
     event.value(e)
     |> result.nil_error
     |> result.then(int.parse)
     |> result.map(fn(v) {
-      msg.QuantityChanged(item.id, model.UpsertItem(item.name, v))
+      msg.QuantityChanged(item.id, item.CreateItem(item.name, v))
     })
     |> result.replace_error([])
   }

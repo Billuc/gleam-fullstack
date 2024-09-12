@@ -3029,6 +3029,38 @@ function label(attrs, children2) {
   return element2("label", attrs, children2);
 }
 
+// build/dev/javascript/shared/shared/types/item.mjs
+var Item = class extends CustomType {
+  constructor(id, name, amount) {
+    super();
+    this.id = id;
+    this.name = name;
+    this.amount = amount;
+  }
+};
+var CreateItem = class extends CustomType {
+  constructor(name, amount) {
+    super();
+    this.name = name;
+    this.amount = amount;
+  }
+};
+function json_decoder(value3) {
+  let _pipe = value3;
+  return decode3(
+    (var0, var1, var2) => {
+      return new Item(var0, var1, var2);
+    },
+    field("id", string),
+    field("name", string),
+    field("amount", int)
+  )(_pipe);
+}
+function json_list_decoder(value3) {
+  let _pipe = value3;
+  return list(json_decoder)(_pipe);
+}
+
 // build/dev/javascript/gleam_stdlib/gleam/uri.mjs
 var Uri = class extends CustomType {
   constructor(scheme, userinfo, host, port, path, query, fragment) {
@@ -3777,38 +3809,6 @@ function expect_json(decoder, to_msg) {
   );
 }
 
-// build/dev/javascript/app/types/model.mjs
-var ShoppingItem = class extends CustomType {
-  constructor(id, name, amount) {
-    super();
-    this.id = id;
-    this.name = name;
-    this.amount = amount;
-  }
-};
-var UpsertItem = class extends CustomType {
-  constructor(name, amount) {
-    super();
-    this.name = name;
-    this.amount = amount;
-  }
-};
-function item_decoder(value3) {
-  let _pipe = value3;
-  return decode3(
-    (var0, var1, var2) => {
-      return new ShoppingItem(var0, var1, var2);
-    },
-    field("id", string),
-    field("name", string),
-    field("amount", int)
-  )(_pipe);
-}
-function item_list_decoder(value3) {
-  let _pipe = value3;
-  return list(item_decoder)(_pipe);
-}
-
 // build/dev/javascript/app/types/msg.mjs
 var ProductAdded = class extends CustomType {
   constructor(name) {
@@ -3901,7 +3901,7 @@ function shopping_item(item) {
       (v) => {
         return new QuantityChanged(
           item.id,
-          new UpsertItem(item.name, v)
+          new CreateItem(item.name, v)
         );
       }
     );
@@ -3976,7 +3976,7 @@ function new_item2(name) {
       toList([["name", string2(name)], ["amount", int2(0)]])
     ),
     expect_json(
-      item_decoder,
+      json_decoder,
       (var0) => {
         return new ServerCreatedItem(var0);
       }
@@ -3988,7 +3988,7 @@ function get_all_items() {
   return get2(
     url,
     expect_json(
-      item_list_decoder,
+      json_list_decoder,
       (var0) => {
         return new ServerSentItems(var0);
       }
@@ -4006,7 +4006,7 @@ function update_item(id, update2) {
       ])
     ),
     expect_json(
-      item_decoder,
+      json_decoder,
       (var0) => {
         return new ServerUpdatedItem(var0);
       }
@@ -4144,7 +4144,7 @@ function main() {
     throw makeError(
       "assignment_no_match",
       "app",
-      17,
+      18,
       "main",
       "Assignment pattern did not match",
       { value: $ }

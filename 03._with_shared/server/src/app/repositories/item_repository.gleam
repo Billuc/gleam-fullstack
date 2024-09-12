@@ -1,5 +1,4 @@
 import app/types/error
-import app/types/item
 import app/utils/sqlight_utils
 import app/web
 import cake/delete as d
@@ -11,6 +10,7 @@ import gleam/list
 import gleam/result
 import gleam/string
 import gluid
+import shared/types/item
 
 pub fn get(id: String, ctx: web.Context) -> Result(item.Item, error.AppError) {
   s.new()

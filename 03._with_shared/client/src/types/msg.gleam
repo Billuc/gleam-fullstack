@@ -1,12 +1,12 @@
 import lustre_http
-import types/model
+import shared/types/item
 
 pub type Msg {
   ProductAdded(name: String)
   ProductRemoved(id: String)
-  QuantityChanged(id: String, update: model.UpsertItem)
-  ServerCreatedItem(Result(model.ShoppingItem, lustre_http.HttpError))
-  ServerSentItems(Result(List(model.ShoppingItem), lustre_http.HttpError))
-  ServerUpdatedItem(Result(model.ShoppingItem, lustre_http.HttpError))
+  QuantityChanged(id: String, update: item.CreateItem)
+  ServerCreatedItem(Result(item.Item, lustre_http.HttpError))
+  ServerSentItems(Result(List(item.Item), lustre_http.HttpError))
+  ServerUpdatedItem(Result(item.Item, lustre_http.HttpError))
   ServerDeletedItem(Result(String, lustre_http.HttpError))
 }

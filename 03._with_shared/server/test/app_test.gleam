@@ -1,6 +1,3 @@
-import gleam/dict
-import gleam/dynamic
-import gleam/list
 import gleeunit
 import gleeunit/should
 

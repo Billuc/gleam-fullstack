@@ -3,7 +3,7 @@ import gleam/http/request
 import gleam/json
 import gleam/string
 import lustre_http
-import types/model
+import shared/types/item
 import types/msg
 
 pub fn new_item(name: String) {
@@ -11,7 +11,7 @@ pub fn new_item(name: String) {
   lustre_http.post(
     url,
     json.object([#("name", json.string(name)), #("amount", json.int(0))]),
-    lustre_http.expect_json(model.item_decoder, msg.ServerCreatedItem),
+    lustre_http.expect_json(item.json_decoder, msg.ServerCreatedItem),
   )
 }
 
@@ -19,11 +19,11 @@ pub fn get_all_items() {
   let url = "http://localhost:2345/items"
   lustre_http.get(
     url,
-    lustre_http.expect_json(model.item_list_decoder, msg.ServerSentItems),
+    lustre_http.expect_json(item.json_list_decoder, msg.ServerSentItems),
   )
 }
 
-pub fn update_item(id: String, update: model.UpsertItem) {
+pub fn update_item(id: String, update: item.CreateItem) {
   let url = string.append("http://localhost:2345/items/", id)
   lustre_http.post(
     url,
@@ -31,7 +31,7 @@ pub fn update_item(id: String, update: model.UpsertItem) {
       #("name", json.string(update.name)),
       #("amount", json.int(update.amount)),
     ]),
-    lustre_http.expect_json(model.item_decoder, msg.ServerUpdatedItem),
+    lustre_http.expect_json(item.json_decoder, msg.ServerUpdatedItem),
   )
 }
 
