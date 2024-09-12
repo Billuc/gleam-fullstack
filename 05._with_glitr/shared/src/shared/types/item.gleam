@@ -1,7 +1,7 @@
 import gleam/dynamic
 import gleam/json
 import gleam/result
-import shared/types/converter
+import glitr
 
 pub type Item {
   Item(id: String, name: String, amount: Int)
@@ -11,14 +11,14 @@ pub type CreateItem {
   CreateItem(name: String, amount: Int)
 }
 
-pub const item_converter = converter.JsonConverter(item_encoder, item_decoder)
+pub const item_converter = glitr.JsonConverter(item_encoder, item_decoder)
 
-pub const item_list_converter = converter.JsonConverter(
+pub const item_list_converter = glitr.JsonConverter(
   item_list_encoder,
   item_list_decoder,
 )
 
-pub const item_create_converter = converter.JsonConverter(
+pub const item_create_converter = glitr.JsonConverter(
   encoder_create,
   decoder_create,
 )

@@ -1,4 +1,3 @@
-import app/types/error
 import app/utils/sqlight_utils
 import app/web
 import cake/delete as d
@@ -9,10 +8,11 @@ import cake/where as w
 import gleam/list
 import gleam/result
 import gleam/string
+import glitr_wisp/errors
 import gluid
 import shared/types/item
 
-pub fn get(id: String, ctx: web.Context) -> Result(item.Item, error.AppError) {
+pub fn get(id: String, ctx: web.Context) -> Result(item.Item, errors.AppError) {
   s.new()
   |> s.selects([s.col("id"), s.col("name"), s.col("amount")])
   |> s.from_table("items")
@@ -23,12 +23,12 @@ pub fn get(id: String, ctx: web.Context) -> Result(item.Item, error.AppError) {
     items
     |> list.first
     |> result.replace_error(
-      error.DBError(string.append("Couldn't find item with id ", id)),
+      errors.DBError(string.append("Couldn't find item with id ", id)),
     )
   })
 }
 
-pub fn get_many(ctx: web.Context) -> Result(List(item.Item), error.AppError) {
+pub fn get_many(ctx: web.Context) -> Result(List(item.Item), errors.AppError) {
   s.new()
   |> s.selects([s.col("id"), s.col("name"), s.col("amount")])
   |> s.from_table("items")
@@ -39,7 +39,7 @@ pub fn get_many(ctx: web.Context) -> Result(List(item.Item), error.AppError) {
 pub fn create(
   create: item.CreateItem,
   ctx: web.Context,
-) -> Result(String, error.AppError) {
+) -> Result(String, errors.AppError) {
   let id = gluid.guidv4()
 
   i.new()
@@ -57,7 +57,7 @@ pub fn update(
   update: item.CreateItem,
   id: String,
   ctx: web.Context,
-) -> Result(String, error.AppError) {
+) -> Result(String, errors.AppError) {
   u.new()
   |> u.table("items")
   |> u.sets([
@@ -70,7 +70,7 @@ pub fn update(
   |> result.replace(id)
 }
 
-pub fn delete(id: String, ctx: web.Context) -> Result(String, error.AppError) {
+pub fn delete(id: String, ctx: web.Context) -> Result(String, errors.AppError) {
   d.new()
   |> d.table("items")
   |> d.where(w.col("id") |> w.eq(w.string(id)))

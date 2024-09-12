@@ -2363,7 +2363,7 @@ function morph(prev, next, dispatch) {
       }
       out ??= created;
     } else if (next2.elements !== void 0) {
-      for (const fragmentElement of children(next2)) {
+      for (const fragmentElement of forceChild(next2)) {
         stack.unshift({ prev: prev2, next: fragmentElement, parent });
         prev2 = prev2?.nextSibling;
       }
@@ -2924,7 +2924,62 @@ function label(attrs, children2) {
   return element2("label", attrs, children2);
 }
 
-// build/dev/javascript/shared/shared/types/converter.mjs
+// build/dev/javascript/gleam_http/gleam/http.mjs
+var Get = class extends CustomType {
+};
+var Post = class extends CustomType {
+};
+var Head = class extends CustomType {
+};
+var Put = class extends CustomType {
+};
+var Delete = class extends CustomType {
+};
+var Trace = class extends CustomType {
+};
+var Connect = class extends CustomType {
+};
+var Options = class extends CustomType {
+};
+var Patch = class extends CustomType {
+};
+var Http = class extends CustomType {
+};
+var Https = class extends CustomType {
+};
+function method_to_string(method) {
+  if (method instanceof Connect) {
+    return "connect";
+  } else if (method instanceof Delete) {
+    return "delete";
+  } else if (method instanceof Get) {
+    return "get";
+  } else if (method instanceof Head) {
+    return "head";
+  } else if (method instanceof Options) {
+    return "options";
+  } else if (method instanceof Patch) {
+    return "patch";
+  } else if (method instanceof Post) {
+    return "post";
+  } else if (method instanceof Put) {
+    return "put";
+  } else if (method instanceof Trace) {
+    return "trace";
+  } else {
+    let s = method[0];
+    return s;
+  }
+}
+function scheme_to_string(scheme) {
+  if (scheme instanceof Http) {
+    return "http";
+  } else {
+    return "https";
+  }
+}
+
+// build/dev/javascript/glitr/glitr.mjs
 var JsonConverter = class extends CustomType {
   constructor(encoder, decoder) {
     super();
@@ -2937,6 +2992,19 @@ var PathConverter = class extends CustomType {
     super();
     this.encoder = encoder;
     this.decoder = decoder;
+  }
+};
+var Route = class extends CustomType {
+  constructor(method, scheme, host, port, has_body, path_converter, req_body_converter, res_body_converter) {
+    super();
+    this.method = method;
+    this.scheme = scheme;
+    this.host = host;
+    this.port = port;
+    this.has_body = has_body;
+    this.path_converter = path_converter;
+    this.req_body_converter = req_body_converter;
+    this.res_body_converter = res_body_converter;
   }
 };
 
@@ -3194,61 +3262,6 @@ function value2(event2) {
   );
 }
 
-// build/dev/javascript/gleam_http/gleam/http.mjs
-var Get = class extends CustomType {
-};
-var Post = class extends CustomType {
-};
-var Head = class extends CustomType {
-};
-var Put = class extends CustomType {
-};
-var Delete = class extends CustomType {
-};
-var Trace = class extends CustomType {
-};
-var Connect = class extends CustomType {
-};
-var Options2 = class extends CustomType {
-};
-var Patch = class extends CustomType {
-};
-var Http = class extends CustomType {
-};
-var Https = class extends CustomType {
-};
-function method_to_string(method) {
-  if (method instanceof Connect) {
-    return "connect";
-  } else if (method instanceof Delete) {
-    return "delete";
-  } else if (method instanceof Get) {
-    return "get";
-  } else if (method instanceof Head) {
-    return "head";
-  } else if (method instanceof Options2) {
-    return "options";
-  } else if (method instanceof Patch) {
-    return "patch";
-  } else if (method instanceof Post) {
-    return "post";
-  } else if (method instanceof Put) {
-    return "put";
-  } else if (method instanceof Trace) {
-    return "trace";
-  } else {
-    let s = method[0];
-    return s;
-  }
-}
-function scheme_to_string(scheme) {
-  if (scheme instanceof Http) {
-    return "http";
-  } else {
-    return "https";
-  }
-}
-
 // build/dev/javascript/gleam_http/gleam/http/request.mjs
 var Request = class extends CustomType {
   constructor(method, headers, body, scheme, host, port, path, query) {
@@ -3263,20 +3276,20 @@ var Request = class extends CustomType {
     this.query = query;
   }
 };
-function to_uri(request2) {
+function to_uri(request) {
   return new Uri(
-    new Some(scheme_to_string(request2.scheme)),
+    new Some(scheme_to_string(request.scheme)),
     new None(),
-    new Some(request2.host),
-    request2.port,
-    request2.path,
-    request2.query,
+    new Some(request.host),
+    request.port,
+    request.path,
+    request.query,
     new None()
   );
 }
-function set_header(request2, key, value3) {
-  let headers = key_set(request2.headers, lowercase2(key), value3);
-  return request2.withFields({ headers });
+function set_header(request, key, value3) {
+  let headers = key_set(request.headers, lowercase2(key), value3);
+  return request.withFields({ headers });
 }
 function set_body(req, body) {
   let method = req.method;
@@ -3381,9 +3394,9 @@ function try_await(promise, callback) {
 }
 
 // build/dev/javascript/gleam_fetch/ffi.mjs
-async function raw_send(request2) {
+async function raw_send(request) {
   try {
-    return new Ok(await fetch(request2));
+    return new Ok(await fetch(request));
   } catch (error) {
     return new Error(new NetworkError(error.toString()));
   }
@@ -3395,15 +3408,15 @@ function from_fetch_response(response) {
     response
   );
 }
-function to_fetch_request(request2) {
-  let url = to_string7(to_uri(request2));
-  let method = method_to_string(request2.method).toUpperCase();
+function to_fetch_request(request) {
+  let url = to_string7(to_uri(request));
+  let method = method_to_string(request.method).toUpperCase();
   let options = {
-    headers: make_headers(request2.headers),
+    headers: make_headers(request.headers),
     method
   };
   if (method !== "GET" && method !== "HEAD")
-    options.body = request2.body;
+    options.body = request.body;
   return new globalThis.Request(url, options);
 }
 function make_headers(headersList) {
@@ -3431,8 +3444,8 @@ var NetworkError = class extends CustomType {
 };
 var UnableToReadBody = class extends CustomType {
 };
-function send(request2) {
-  let _pipe = request2;
+function send(request) {
+  let _pipe = request;
   let _pipe$1 = to_fetch_request(_pipe);
   let _pipe$2 = raw_send(_pipe$1);
   return try_await(
@@ -3702,54 +3715,7 @@ function shopping_list(model) {
   );
 }
 
-// build/dev/javascript/shared/shared/types/routes.mjs
-var Route = class extends CustomType {
-  constructor(method, scheme, host, port, has_body, path_converter, req_body_converter, res_body_converter) {
-    super();
-    this.method = method;
-    this.scheme = scheme;
-    this.host = host;
-    this.port = port;
-    this.has_body = has_body;
-    this.path_converter = path_converter;
-    this.req_body_converter = req_body_converter;
-    this.res_body_converter = res_body_converter;
-  }
-};
-function request(route, path, body) {
-  let req = (() => {
-    let _pipe = new$5();
-    let _pipe$1 = set_method(_pipe, route.method);
-    let _pipe$2 = set_scheme(_pipe$1, route.scheme);
-    let _pipe$3 = set_host(_pipe$2, route.host);
-    let _pipe$4 = set_port(_pipe$3, route.port);
-    return set_path(
-      _pipe$4,
-      (() => {
-        let _pipe$5 = path;
-        let _pipe$6 = route.path_converter.encoder(_pipe$5);
-        return join2(_pipe$6, "/");
-      })()
-    );
-  })();
-  let $ = route.has_body;
-  if ($) {
-    let _pipe = req;
-    let _pipe$1 = set_body(
-      _pipe,
-      (() => {
-        let _pipe$12 = body;
-        let _pipe$2 = route.req_body_converter.encoder(_pipe$12);
-        return to_string5(_pipe$2);
-      })()
-    );
-    return set_header(_pipe$1, "Content-Type", "application/json");
-  } else {
-    return req;
-  }
-}
-
-// build/dev/javascript/shared/shared/utils/converters.mjs
+// build/dev/javascript/glitr/glitr/utils.mjs
 function simple_path_converter(root) {
   return new PathConverter(
     (_) => {
@@ -3792,6 +3758,49 @@ function no_body_converter() {
     (_) => {
       return new Ok(void 0);
     }
+  );
+}
+function to_request(route, path, body) {
+  let req = (() => {
+    let _pipe = new$5();
+    let _pipe$1 = set_method(_pipe, route.method);
+    let _pipe$2 = set_scheme(_pipe$1, route.scheme);
+    let _pipe$3 = set_host(_pipe$2, route.host);
+    let _pipe$4 = set_port(_pipe$3, route.port);
+    return set_path(
+      _pipe$4,
+      (() => {
+        let _pipe$5 = path;
+        let _pipe$6 = route.path_converter.encoder(_pipe$5);
+        return join2(_pipe$6, "/");
+      })()
+    );
+  })();
+  let $ = route.has_body;
+  if ($) {
+    let _pipe = req;
+    let _pipe$1 = set_body(
+      _pipe,
+      (() => {
+        let _pipe$12 = body;
+        let _pipe$2 = route.req_body_converter.encoder(_pipe$12);
+        return to_string5(_pipe$2);
+      })()
+    );
+    return set_header(_pipe$1, "Content-Type", "application/json");
+  } else {
+    return req;
+  }
+}
+
+// build/dev/javascript/glitr_lustre/glitr_lustre.mjs
+function send_to_route(route, path, body, as_msg) {
+  return send2(
+    (() => {
+      let _pipe = route;
+      return to_request(_pipe, path, body);
+    })(),
+    expect_json(route.res_body_converter.decoder, as_msg)
   );
 }
 
@@ -3842,17 +3851,6 @@ function delete$2() {
     id_path_converter(toList(["items"])),
     no_body_converter(),
     new JsonConverter(string2, string)
-  );
-}
-
-// build/dev/javascript/app/utils/service_utils.mjs
-function send_to_route(route, path, body, as_msg) {
-  return send2(
-    (() => {
-      let _pipe = route;
-      return request(_pipe, path, body);
-    })(),
-    expect_json(route.res_body_converter.decoder, as_msg)
   );
 }
 

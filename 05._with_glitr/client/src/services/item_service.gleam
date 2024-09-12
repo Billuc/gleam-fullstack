@@ -1,10 +1,10 @@
+import glitr_lustre
 import shared/routes/item_routes
 import shared/types/item
 import types/msg
-import utils/service_utils
 
 pub fn new_item(name: String) {
-  service_utils.send_to_route(
+  glitr_lustre.send_to_route(
     item_routes.create(),
     Nil,
     item.CreateItem(name, 0),
@@ -13,7 +13,7 @@ pub fn new_item(name: String) {
 }
 
 pub fn get_all_items() {
-  service_utils.send_to_route(
+  glitr_lustre.send_to_route(
     item_routes.get_all(),
     Nil,
     Nil,
@@ -22,7 +22,7 @@ pub fn get_all_items() {
 }
 
 pub fn update_item(id: String, update: item.CreateItem) {
-  service_utils.send_to_route(
+  glitr_lustre.send_to_route(
     item_routes.update(),
     id,
     update,
@@ -31,7 +31,7 @@ pub fn update_item(id: String, update: item.CreateItem) {
 }
 
 pub fn delete_item(id: String) {
-  service_utils.send_to_route(
+  glitr_lustre.send_to_route(
     item_routes.delete(),
     id,
     Nil,

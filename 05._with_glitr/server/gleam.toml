@@ -24,6 +24,8 @@ gleam_erlang = ">= 0.26.0 and < 1.0.0"
 mist = ">= 2.0.0 and < 3.0.0"
 cake = ">= 1.1.2 and < 2.0.0"
 shared = { path = "../shared" }
+glitr_wisp = ">= 0.1.0 and < 1.0.0"
+glitr = ">= 0.1.0 and < 1.0.0"
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"

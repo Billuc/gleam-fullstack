@@ -1,4 +1,3 @@
-import app/types/error
 import cake
 import cake/dialect/sqlite_dialect
 import cake/param
@@ -6,6 +5,7 @@ import gleam/dynamic.{type Dynamic}
 import gleam/list
 import gleam/result
 import gleam/string
+import glitr_wisp/errors
 import pprint
 import sqlight
 
@@ -13,7 +13,7 @@ pub fn exec_read_query(
   read_query: cake.ReadQuery,
   connection: sqlight.Connection,
   decoder: fn(Dynamic) -> Result(a, List(dynamic.DecodeError)),
-) -> Result(List(a), error.AppError) {
+) -> Result(List(a), errors.AppError) {
   let query =
     read_query
     |> sqlite_dialect.read_query_to_prepared_statement
@@ -28,7 +28,7 @@ pub fn exec_read_query(
     decoder,
   )
   |> result.map_error(fn(err) {
-    error.DBError(string.append("Error during query : ", err.message))
+    errors.DBError(string.append("Error during query : ", err.message))
   })
 }
 
@@ -36,7 +36,7 @@ pub fn exec_write_query(
   write_query: cake.WriteQuery(_),
   connection: sqlight.Connection,
   decoder: fn(Dynamic) -> Result(a, List(dynamic.DecodeError)),
-) -> Result(List(a), error.AppError) {
+) -> Result(List(a), errors.AppError) {
   let query =
     write_query
     |> sqlite_dialect.write_query_to_prepared_statement
@@ -51,7 +51,7 @@ pub fn exec_write_query(
     decoder,
   )
   |> result.map_error(fn(err) {
-    error.DBError(string.append("Error during query : ", err.message))
+    errors.DBError(string.append("Error during query : ", err.message))
   })
 }
 
